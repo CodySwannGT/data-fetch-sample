@@ -1,46 +1,98 @@
-# Getting Started with Create React App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# Design: Trading Card Pricing Tracking System
 
-## Available Scripts
+## Data Collection and Storage
 
-In the project directory, you can run:
+- Users, Holdings, and Products: These entities can be stored in DynamoDB.
+- Market Transactions: Store market transaction data in DynamoDB as well.
 
-### `npm start`
+## Market Data Aggregation
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- Collect data from various market sources using APIs or web scraping.
+- Process and clean the collected data before storing it in DynamoDB.
+- Utilize AWS Lambda functions or EC2 instances for data processing.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## Price Deviation Calculation
 
-### `npm test`
+- Implement a background job or scheduled Lambda function to calculate the average market price for each product.
+- Store average market price alongside product details in DynamoDB.
+- Calculate user-defined threshold (e.g., +/- 10%) based on the average market price.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Listing Monitoring and Notification
 
-### `npm run build`
+- Use DynamoDB Streams to capture changes in the listings table.
+- Set up an AWS Lambda function to analyze changes and compare listed prices with average market price and threshold.
+- Publish notification message to an SNS topic when a listing price exceeds the threshold.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Notification Service
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- Create an SNS topic and subscribe users to it.
+- Configure SNS to send notifications via multiple communication channels.
+- Integrate Amazon SES with SNS to send emails for notifications.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Diagram
 
-### `npm run eject`
+```
+          +------------------------+
+          |        Users           |
+          +------------------------+
+                    |        +
+                    |        | Manages
+                    |        |
+          +------------------------+
+          |       Holdings         |
+          +------------------------+
+                    |        +
+                    |        | Consists of
+                    |        |
+          +------------------------+
+          |       Products         |
+          +------------------------+
+                    |        +
+                    |        | Contains
+                    |        |
+          +------------------------+
+          |   Market Transactions   |
+          +------------------------+
+                    |
+                    |  Collects from
+                    |
+          +------------------------+
+          |  Market Data Aggregator|
+          +------------------------+
+                    |
+                    |  Calculates and updates
+                    |
+          +------------------------+
+          | Price Deviation Service|
+          +------------------------+
+                    |
+                    |  Monitors and publishes
+                    |
+          +------------------------+
+          |     DynamoDB Streams    |
+          +------------------------+
+                    |
+                    |  Analyzes changes and publishes
+                    |
+          +------------------------+
+          |     Lambda Function     |
+          +------------------------+
+                    |
+                    | Subscribes and sends
+                    |
+          +------------------------+
+          |      SNS (Topic)        |
+          +------------------------+
+                    |        +
+                    |        | Sends
+                    |        |
+          +------------------------+
+          |        SES             |
+          +------------------------+
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+Advantages of using DynamoDB, SNS, and SES:
+- DynamoDB provides scalability, low latency, and automatic scaling.
+- SNS offers a flexible and scalable notification service.
+- SES ensures reliable email delivery.
